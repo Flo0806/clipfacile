@@ -1,0 +1,23 @@
+{
+  "app": {
+    "name": "Clipfacile",
+    "tagline": "Einfache Videobearbeitung im Browser"
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "create": "Erstellen",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "loading": "Lädt...",
+    "error": "Fehler",
+    "success": "Erfolgreich"
+  },
+  "nav": {
+    "home": "Startseite",
+    "projects": "Projekte",
+    "settings": "Einstellungen"
+  }
+}

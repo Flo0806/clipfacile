@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+/* Gradient utilities for elegant Nuxt-style effects */
+.gradient-primary {
+  @apply bg-gradient-to-r from-cyan-500 to-purple-500;
+}
+
+.gradient-primary-subtle {
+  @apply bg-gradient-to-r from-cyan-500/10 to-purple-500/10;
+}
+
+.gradient-text {
+  @apply bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent;
+}
+
+/* Dark mode gradient adjustments */
+.dark .gradient-primary-subtle {
+  @apply from-cyan-500/20 to-purple-500/20;
+}

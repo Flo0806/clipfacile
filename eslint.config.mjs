@@ -3,6 +3,11 @@ import withNuxt from './.nuxt/eslint.config.mjs'
 
 export default withNuxt({
   rules: {
+    // Vue - kebab-case for components in templates
+    'vue/component-name-in-template-casing': ['error', 'kebab-case', {
+      registeredComponentsOnly: false,
+    }],
+
     // Stylistic
     '@stylistic/indent': ['error', 2],
     '@stylistic/semi': ['error', 'never'],

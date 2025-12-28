@@ -13,11 +13,32 @@
     "confirm": "Confirm",
     "loading": "Loading...",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "untitled": "Untitled"
   },
   "nav": {
     "home": "Home",
     "projects": "Projects",
     "settings": "Settings"
+  },
+  "editor": {
+    "preview": "Preview",
+    "timeline": "Timeline",
+    "tracks": "Tracks",
+    "addTrack": "Add Track",
+    "video": "Video",
+    "audio": "Audio",
+    "text": "Text",
+    "import": "Import",
+    "export": "Export",
+    "play": "Play",
+    "pause": "Pause",
+    "stop": "Stop",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "undo": "Undo",
+    "redo": "Redo",
+    "projectSaved": "Project saved",
+    "newProject": "New Project"
   }
 }

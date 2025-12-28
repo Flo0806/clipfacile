@@ -12,6 +12,10 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   css: ['~/assets/css/main.css'],
+
+  runtimeConfig: {
+    mongodbUri: process.env.MONGODB_URI || '',
+  },
   compatibilityDate: '2025-07-15',
 
   eslint: {
@@ -28,9 +32,5 @@ export default defineNuxtConfig({
     defaultLocale: 'de',
     langDir: 'locales',
     strategy: 'no_prefix',
-  },
-
-  runtimeConfig: {
-    mongodbUri: process.env.MONGODB_URI || '',
   },
 })

@@ -13,11 +13,32 @@
     "confirm": "Bestätigen",
     "loading": "Lädt...",
     "error": "Fehler",
-    "success": "Erfolgreich"
+    "success": "Erfolgreich",
+    "untitled": "Unbenannt"
   },
   "nav": {
     "home": "Startseite",
     "projects": "Projekte",
     "settings": "Einstellungen"
+  },
+  "editor": {
+    "preview": "Vorschau",
+    "timeline": "Zeitleiste",
+    "tracks": "Spuren",
+    "addTrack": "Spur hinzufügen",
+    "video": "Video",
+    "audio": "Audio",
+    "text": "Text",
+    "import": "Importieren",
+    "export": "Exportieren",
+    "play": "Abspielen",
+    "pause": "Pause",
+    "stop": "Stopp",
+    "zoomIn": "Vergrößern",
+    "zoomOut": "Verkleinern",
+    "undo": "Rückgängig",
+    "redo": "Wiederholen",
+    "projectSaved": "Projekt gespeichert",
+    "newProject": "Neues Projekt"
   }
 }

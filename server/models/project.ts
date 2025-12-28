@@ -1,5 +1,4 @@
 import mongoose, { Schema } from 'mongoose'
-import type { Project } from '../../types/project'
 
 const TrackSchema = new Schema({
   id: { type: String, required: true },

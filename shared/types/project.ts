@@ -76,13 +76,13 @@ export interface Effect {
   params: Record<string, number | string | boolean>
 }
 
-export type EffectType =
-  | 'brightness'
-  | 'contrast'
-  | 'saturation'
-  | 'blur'
-  | 'grayscale'
-  | 'sepia'
+export type EffectType
+  = | 'brightness'
+    | 'contrast'
+    | 'saturation'
+    | 'blur'
+    | 'grayscale'
+    | 'sepia'
 
 // Transitions
 export interface Transition {
@@ -92,13 +92,13 @@ export interface Transition {
   duration: number
 }
 
-export type TransitionType =
-  | 'fade'
-  | 'dissolve'
-  | 'wipe-left'
-  | 'wipe-right'
-  | 'wipe-up'
-  | 'wipe-down'
+export type TransitionType
+  = | 'fade'
+    | 'dissolve'
+    | 'wipe-left'
+    | 'wipe-right'
+    | 'wipe-up'
+    | 'wipe-down'
 
 // Track
 export interface Track {

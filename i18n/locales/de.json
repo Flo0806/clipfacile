@@ -39,6 +39,9 @@
     "undo": "Rückgängig",
     "redo": "Wiederholen",
     "projectSaved": "Projekt gespeichert",
-    "newProject": "Neues Projekt"
+    "newProject": "Neues Projekt",
+    "dragHint": "Dateien hierher ziehen oder importieren",
+    "dragToTimeline": "Zur Zeitleiste ziehen",
+    "image": "Bild"
   }
 }

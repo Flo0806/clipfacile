@@ -11,8 +11,7 @@ export default defineNitroPlugin(async () => {
   try {
     await mongoose.connect(config.mongodbUri)
     console.log('[MongoDB] Connected successfully')
-  }
-  catch (error) {
+  } catch (error) {
     console.error('[MongoDB] Connection failed:', error)
   }
 })

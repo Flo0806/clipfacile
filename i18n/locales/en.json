@@ -39,6 +39,9 @@
     "undo": "Undo",
     "redo": "Redo",
     "projectSaved": "Project saved",
-    "newProject": "New Project"
+    "newProject": "New Project",
+    "dragHint": "Drag files here or click import",
+    "dragToTimeline": "Drag to timeline",
+    "image": "Image"
   }
 }

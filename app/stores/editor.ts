@@ -367,18 +367,20 @@ export const useEditorStore = defineStore('editor', () => {
   return {
     // State (readonly for external use)
     state,
-    projectId: readonly(projectId),
-    projectName: readonly(projectName),
-    tracks: readonly(tracks),
-    clips: readonly(clips),
-    mediaFiles: readonly(mediaFiles),
-    selectedClipId: readonly(selectedClipId),
-    currentTime: readonly(currentTime),
-    duration: readonly(duration),
-    zoom: readonly(zoom),
-    isPlaying: readonly(isPlaying),
-    resolution: readonly(resolution),
-    frameRate: readonly(frameRate),
+    // Use computed instead of readonly to avoid SSR hydration warnings
+    // Computed properties are naturally excluded from Pinia hydration
+    projectId: computed(() => projectId.value),
+    projectName: computed(() => projectName.value),
+    tracks: computed(() => tracks.value),
+    clips: computed(() => clips.value),
+    mediaFiles: computed(() => mediaFiles.value),
+    selectedClipId: computed(() => selectedClipId.value),
+    currentTime: computed(() => currentTime.value),
+    duration: computed(() => duration.value),
+    zoom: computed(() => zoom.value),
+    isPlaying: computed(() => isPlaying.value),
+    resolution: computed(() => resolution.value),
+    frameRate: computed(() => frameRate.value),
 
     // Getters
     getClipsForTrack,

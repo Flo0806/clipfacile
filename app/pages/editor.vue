@@ -112,12 +112,22 @@ onUnmounted(() => {
           orientation="vertical"
           class="h-6"
         />
-        <u-button
-          :icon="colorMode.value === 'dark' ? 'i-heroicons-sun' : 'i-heroicons-moon'"
-          variant="ghost"
-          color="neutral"
-          @click="toggleTheme"
-        />
+        <client-only>
+          <u-button
+            :icon="colorMode.value === 'dark' ? 'i-heroicons-sun' : 'i-heroicons-moon'"
+            variant="ghost"
+            color="neutral"
+            @click="toggleTheme"
+          />
+          <template #fallback>
+            <u-button
+              icon="i-heroicons-moon"
+              variant="ghost"
+              color="neutral"
+              disabled
+            />
+          </template>
+        </client-only>
         <u-button
           icon="i-heroicons-arrow-down-tray"
           variant="soft"

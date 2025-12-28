@@ -14,6 +14,13 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  colorMode: {
+    preference: 'system',
+    fallback: 'light',
+    storage: 'cookie',
+    storageKey: 'nuxt-color-mode',
+  },
+
   runtimeConfig: {
     mongodbUri: process.env.MONGODB_URI || '',
   },

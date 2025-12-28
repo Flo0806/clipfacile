@@ -36,6 +36,8 @@
     "stop": "Stopp",
     "zoomIn": "Vergrößern",
     "zoomOut": "Verkleinern",
+    "skipBackward": "5 Sekunden zurück",
+    "skipForward": "5 Sekunden vor",
     "undo": "Rückgängig",
     "redo": "Wiederholen",
     "projectSaved": "Projekt gespeichert",

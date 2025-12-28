@@ -3,6 +3,9 @@ import type { MediaFile, EditorState } from '../../shared/types/editor'
 
 const DEFAULT_IMAGE_DURATION = 5000 // 5 seconds default for images
 
+// Track limits per type
+const MAX_TRACKS_PER_TYPE = 10
+
 export const useEditorStore = defineStore('editor', () => {
   // State
   const projectId = ref<string | null>(null)
@@ -288,19 +291,84 @@ export const useEditorStore = defineStore('editor', () => {
     return true
   }
 
-  function addTrack(type: TrackType): Track {
-    const trackCount = tracks.value.filter((t) => t.type === type).length + 1
+  function addTrack(type: TrackType): Track | null {
+    const existingCount = tracks.value.filter((t) => t.type === type).length
+
+    // Check limit
+    if (existingCount >= MAX_TRACKS_PER_TYPE) {
+      return null
+    }
+
     const typeName = type.charAt(0).toUpperCase() + type.slice(1)
     const newTrack: Track = {
       id: crypto.randomUUID(),
       type,
-      name: `${typeName} ${trackCount}`,
+      name: `${typeName} ${existingCount + 1}`,
       order: tracks.value.length,
       muted: false,
       locked: false,
     }
     tracks.value.push(newTrack)
+    sortTracks()
     return newTrack
+  }
+
+  function removeTrack(trackId: string): { success: boolean, hadClips: boolean } {
+    const trackIndex = tracks.value.findIndex((t) => t.id === trackId)
+    if (trackIndex === -1) {
+      return { success: false, hadClips: false }
+    }
+
+    // Check if track has clips
+    const trackClips = clips.value.filter((c) => c.trackId === trackId)
+    const hadClips = trackClips.length > 0
+
+    // Remove all clips on this track
+    if (hadClips) {
+      clips.value = clips.value.filter((c) => c.trackId !== trackId)
+      if (selectedClipId.value && trackClips.some((c) => c.id === selectedClipId.value)) {
+        selectedClipId.value = null
+      }
+    }
+
+    // Remove the track
+    tracks.value.splice(trackIndex, 1)
+
+    // Renumber tracks of same type
+    renumberTracks()
+    updateDuration()
+
+    return { success: true, hadClips }
+  }
+
+  function canAddTrack(type: TrackType): boolean {
+    return tracks.value.filter((t) => t.type === type).length < MAX_TRACKS_PER_TYPE
+  }
+
+  function sortTracks() {
+    // Sort: video first, then audio, then text
+    const typeOrder: Record<TrackType, number> = { video: 0, audio: 1, text: 2 }
+    tracks.value.sort((a, b) => {
+      if (a.type !== b.type) {
+        return typeOrder[a.type] - typeOrder[b.type]
+      }
+      return a.order - b.order
+    })
+    // Update order values
+    tracks.value.forEach((t, i) => t.order = i)
+  }
+
+  function renumberTracks() {
+    // Renumber tracks of each type
+    const types: TrackType[] = ['video', 'audio', 'text']
+    for (const type of types) {
+      const typeTracks = tracks.value.filter((t) => t.type === type)
+      const typeName = type.charAt(0).toUpperCase() + type.slice(1)
+      typeTracks.forEach((t, i) => {
+        t.name = `${typeName} ${i + 1}`
+      })
+    }
+    sortTracks()
   }
 
   function selectClip(clipId: string | null) {
@@ -394,6 +462,8 @@ export const useEditorStore = defineStore('editor', () => {
     removeClip,
     resizeClip,
     addTrack,
+    removeTrack,
+    canAddTrack,
     selectClip,
     setCurrentTime,
     setIsPlaying,

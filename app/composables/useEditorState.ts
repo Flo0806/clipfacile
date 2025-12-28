@@ -56,6 +56,8 @@ export function useEditorState() {
     removeClip: store.removeClip,
     resizeClip: store.resizeClip,
     addTrack: store.addTrack,
+    removeTrack: store.removeTrack,
+    canAddTrack: store.canAddTrack,
     selectClip: store.selectClip,
     setCurrentTime: store.setCurrentTime,
     setIsPlaying: store.setIsPlaying,

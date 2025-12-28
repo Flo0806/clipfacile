@@ -4,8 +4,8 @@ const props = defineProps<{
   pixelsPerMs: number
 }>()
 
-// Track label (w-24=96px) + gap-2 (8px) + container px-2 (8px) = 112px
-const LABEL_WIDTH = 112
+// Track label (w-32=128px) + gap-2 (8px) + container px-2 (8px) = 144px
+const LABEL_WIDTH = 144
 
 const playheadStyle = computed(() => ({
   left: `${LABEL_WIDTH + props.currentTime * props.pixelsPerMs}px`,

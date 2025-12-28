@@ -44,6 +44,10 @@
     "newProject": "New Project",
     "dragHint": "Drag files here or click import",
     "dragToTimeline": "Drag to timeline",
-    "image": "Image"
+    "image": "Image",
+    "deleteTrack": "Delete track",
+    "deleteTrackConfirm": "This track contains clips. Delete anyway?",
+    "deleteTrackTitle": "Delete track",
+    "trackLimitReached": "Maximum number of {type} tracks reached"
   }
 }

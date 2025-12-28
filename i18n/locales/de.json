@@ -44,6 +44,10 @@
     "newProject": "Neues Projekt",
     "dragHint": "Dateien hierher ziehen oder importieren",
     "dragToTimeline": "Zur Zeitleiste ziehen",
-    "image": "Bild"
+    "image": "Bild",
+    "deleteTrack": "Spur löschen",
+    "deleteTrackConfirm": "Diese Spur enthält Clips. Wirklich löschen?",
+    "deleteTrackTitle": "Spur löschen",
+    "trackLimitReached": "Maximale Anzahl an {type}-Spuren erreicht"
   }
 }

@@ -9,17 +9,23 @@ const {
   resizeClip,
   selectClip,
   addTrack,
+  removeTrack,
   setCurrentTime,
   zoomIn,
   zoomOut,
 } = useEditorState()
+
+// Delete confirmation dialog state
+const showDeleteDialog = ref(false)
+const trackToDelete = ref<string | null>(null)
+const trackToDeleteHasClips = ref(false)
 
 const timelineRef = ref<HTMLElement>()
 const containerWidth = ref(800)
 const pixelsPerMs = computed(() => 0.1 * state.zoom) // 0.1px per ms at zoom 1
 
 // Content width for tracks (excluding label area)
-const LABEL_WIDTH = 96 // w-24
+const LABEL_WIDTH = 128 // w-32
 const timelineWidth = computed(() => {
   const visibleWidth = Math.max(0, containerWidth.value - LABEL_WIDTH)
   const contentWidth = state.duration * pixelsPerMs.value
@@ -52,7 +58,9 @@ function handleMoveClip(clipId: string, trackId: string, timeMs: number) {
       if (track && track.type === clip.type) {
         // Same type, collision - create new track and move there
         const newTrack = addTrack(clip.type)
-        moveClip(clipId, newTrack.id, timeMs)
+        if (newTrack) {
+          moveClip(clipId, newTrack.id, timeMs)
+        }
       }
     }
   }
@@ -79,6 +87,32 @@ function handleTimelineDragOver(event: DragEvent) {
 function handleRulerClick(timeMs: number) {
   setCurrentTime(timeMs)
 }
+
+// Track deletion
+function handleDeleteTrackRequest(trackId: string, hasClips: boolean) {
+  if (hasClips) {
+    // Show confirmation dialog
+    trackToDelete.value = trackId
+    trackToDeleteHasClips.value = true
+    showDeleteDialog.value = true
+  } else {
+    // Delete directly
+    removeTrack(trackId)
+  }
+}
+
+function confirmDeleteTrack() {
+  if (trackToDelete.value) {
+    removeTrack(trackToDelete.value)
+  }
+  showDeleteDialog.value = false
+  trackToDelete.value = null
+}
+
+function cancelDeleteTrack() {
+  showDeleteDialog.value = false
+  trackToDelete.value = null
+}
 </script>
 
 <template>
@@ -89,37 +123,43 @@ function handleRulerClick(timeMs: number) {
         {{ t('editor.timeline') }}
       </h3>
       <div class="flex items-center gap-2">
-        <u-button
-          icon="i-heroicons-minus"
-          variant="ghost"
-          color="neutral"
-          size="xs"
-          :aria-label="t('editor.zoomOut')"
-          @click="zoomOut"
-        />
-        <u-button
-          icon="i-heroicons-plus"
-          variant="ghost"
-          color="neutral"
-          size="xs"
-          :aria-label="t('editor.zoomIn')"
-          @click="zoomIn"
-        />
-        <u-dropdown-menu
-          :items="[
-            { label: t('editor.video'), icon: 'i-heroicons-video-camera', click: () => addTrack('video') },
-            { label: t('editor.audio'), icon: 'i-heroicons-musical-note', click: () => addTrack('audio') },
-            { label: t('editor.text'), icon: 'i-heroicons-bars-3-bottom-left', click: () => addTrack('text') },
-          ]"
-        >
+        <u-tooltip :text="t('editor.zoomOut')">
+          <u-button
+            icon="i-heroicons-minus"
+            variant="ghost"
+            color="neutral"
+            size="xs"
+            :aria-label="t('editor.zoomOut')"
+            @click="zoomOut"
+          />
+        </u-tooltip>
+        <u-tooltip :text="t('editor.zoomIn')">
           <u-button
             icon="i-heroicons-plus"
-            variant="soft"
-            color="primary"
+            variant="ghost"
+            color="neutral"
             size="xs"
-          >
-            {{ t('editor.addTrack') }}
-          </u-button>
+            :aria-label="t('editor.zoomIn')"
+            @click="zoomIn"
+          />
+        </u-tooltip>
+        <u-dropdown-menu
+          :items="[
+            { label: t('editor.video'), icon: 'i-heroicons-video-camera', onSelect: () => addTrack('video') },
+            { label: t('editor.audio'), icon: 'i-heroicons-musical-note', onSelect: () => addTrack('audio') },
+            { label: t('editor.text'), icon: 'i-heroicons-bars-3-bottom-left', onSelect: () => addTrack('text') },
+          ]"
+        >
+          <u-tooltip :text="t('editor.addTrack')">
+            <u-button
+              icon="i-heroicons-plus"
+              variant="soft"
+              color="primary"
+              size="xs"
+            >
+              {{ t('editor.addTrack') }}
+            </u-button>
+          </u-tooltip>
         </u-dropdown-menu>
       </div>
     </div>
@@ -160,6 +200,7 @@ function handleRulerClick(timeMs: number) {
           @select-clip="handleSelectClip"
           @remove-clip="handleRemoveClip"
           @resize-clip="handleResizeClip"
+          @delete-track="handleDeleteTrackRequest"
         />
 
         <!-- Empty state -->
@@ -171,5 +212,16 @@ function handleRulerClick(timeMs: number) {
         </div>
       </div>
     </div>
+
+    <!-- Delete Track Confirmation Dialog -->
+    <dialogs-confirm-dialog
+      v-model:open="showDeleteDialog"
+      :title="t('editor.deleteTrackTitle')"
+      :description="t('editor.deleteTrackConfirm')"
+      :confirm-label="t('common.delete')"
+      confirm-color="error"
+      @confirm="confirmDeleteTrack"
+      @cancel="cancelDeleteTrack"
+    />
   </div>
 </template>

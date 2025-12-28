@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { t } = useI18n()
+
 const props = defineProps<{
   track: Track
   clips: Clip[]
@@ -14,9 +16,12 @@ const emit = defineEmits<{
   removeClip: [clipId: string]
   selectClip: [clipId: string]
   resizeClip: [clipId: string, edge: 'left' | 'right', newEdgeTimeMs: number]
+  deleteTrack: [trackId: string, hasClips: boolean]
 }>()
 
 const { getMediaFile, snapToMarker } = useEditorState()
+
+const isHovered = ref(false)
 
 const trackRef = ref<HTMLElement>()
 const isDragOver = ref(false)
@@ -110,22 +115,43 @@ function handleClipResize(_clipId: string, _edge: 'left' | 'right', _newEdgeTime
 function handleClipResizeEnd(clipId: string, edge: 'left' | 'right', newEdgeTimeMs: number) {
   emit('resizeClip', clipId, edge, newEdgeTimeMs)
 }
+
+function handleDeleteTrack() {
+  emit('deleteTrack', props.track.id, props.clips.length > 0)
+}
 </script>
 
 <template>
-  <div class="flex items-center gap-2 h-9">
+  <div
+    class="flex items-center gap-2 h-9 group"
+    @mouseenter="isHovered = true"
+    @mouseleave="isHovered = false"
+  >
     <!-- Track Label -->
-    <div class="w-24 shrink-0 flex items-center gap-2 px-2">
-      <div
-        class="w-2 h-2 rounded-full"
-        :class="`bg-${trackColor}-500`"
+    <div class="w-32 shrink-0 flex items-center justify-between px-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <div
+          class="w-2 h-2 rounded-full shrink-0"
+          :class="`bg-${trackColor}-500`"
+        />
+        <span
+          class="text-xs font-medium truncate"
+          :class="`text-${trackColor}-600 dark:text-${trackColor}-400`"
+        >
+          {{ track.name }}
+        </span>
+      </div>
+      <!-- Delete button (visible on hover) -->
+      <u-button
+        v-show="isHovered"
+        icon="i-heroicons-x-mark"
+        variant="ghost"
+        color="error"
+        size="xs"
+        :title="t('editor.deleteTrack')"
+        :aria-label="t('editor.deleteTrack')"
+        @click="handleDeleteTrack"
       />
-      <span
-        class="text-xs font-medium truncate"
-        :class="`text-${trackColor}-600 dark:text-${trackColor}-400`"
-      >
-        {{ track.name }}
-      </span>
     </div>
 
     <!-- Track Content -->

@@ -5,6 +5,12 @@ const props = defineProps<{
   containerWidth: number // visible container width
 }>()
 
+const emit = defineEmits<{
+  seek: [timeMs: number]
+}>()
+
+const rulerContentRef = ref<HTMLElement>()
+
 // Track label (w-24=96px) + gap-2 (8px) + container px-2 (8px) = 112px
 const LABEL_WIDTH = 112
 
@@ -69,6 +75,15 @@ function formatTime(ms: number): string {
   }
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
+
+function handleClick(event: MouseEvent) {
+  if (!rulerContentRef.value) return
+
+  const rect = rulerContentRef.value.getBoundingClientRect()
+  const x = event.clientX - rect.left
+  const timeMs = Math.max(0, x / props.pixelsPerMs)
+  emit('seek', timeMs)
+}
 </script>
 
 <template>
@@ -82,8 +97,12 @@ function formatTime(ms: number): string {
       :style="{ width: `${LABEL_WIDTH}px` }"
     />
 
-    <!-- Markers area -->
-    <div class="relative flex-1 h-full">
+    <!-- Markers area (clickable) -->
+    <div
+      ref="rulerContentRef"
+      class="relative flex-1 h-full cursor-pointer"
+      @click="handleClick"
+    >
       <div
         v-for="marker in markers"
         :key="marker.time"

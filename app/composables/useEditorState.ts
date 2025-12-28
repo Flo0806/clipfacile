@@ -57,6 +57,8 @@ export function useEditorState() {
     resizeClip: store.resizeClip,
     addTrack: store.addTrack,
     selectClip: store.selectClip,
+    setCurrentTime: store.setCurrentTime,
+    setIsPlaying: store.setIsPlaying,
     hasCollision: store.hasCollision,
     zoomIn: store.zoomIn,
     zoomOut: store.zoomOut,

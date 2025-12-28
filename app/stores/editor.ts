@@ -307,6 +307,14 @@ export const useEditorStore = defineStore('editor', () => {
     selectedClipId.value = clipId
   }
 
+  function setCurrentTime(timeMs: number) {
+    currentTime.value = Math.max(0, timeMs)
+  }
+
+  function setIsPlaying(playing: boolean) {
+    isPlaying.value = playing
+  }
+
   function updateDuration() {
     if (clips.value.length === 0) {
       duration.value = 0
@@ -385,6 +393,8 @@ export const useEditorStore = defineStore('editor', () => {
     resizeClip,
     addTrack,
     selectClip,
+    setCurrentTime,
+    setIsPlaying,
     hasCollision,
     zoomIn,
     zoomOut,

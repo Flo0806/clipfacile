@@ -9,6 +9,7 @@ const {
   resizeClip,
   selectClip,
   addTrack,
+  setCurrentTime,
   zoomIn,
   zoomOut,
 } = useEditorState()
@@ -73,6 +74,11 @@ function handleResizeClip(clipId: string, edge: 'left' | 'right', newEdgeTimeMs:
 function handleTimelineDragOver(event: DragEvent) {
   event.preventDefault()
 }
+
+// Ruler click handler
+function handleRulerClick(timeMs: number) {
+  setCurrentTime(timeMs)
+}
 </script>
 
 <template>
@@ -121,14 +127,21 @@ function handleTimelineDragOver(event: DragEvent) {
     <!-- Tracks Area with Ruler -->
     <div
       ref="timelineRef"
-      class="flex-1 overflow-auto"
+      class="flex-1 overflow-auto relative"
       @dragover="handleTimelineDragOver"
     >
+      <!-- Playhead -->
+      <editor-playhead
+        :current-time="state.currentTime"
+        :pixels-per-ms="pixelsPerMs"
+      />
+
       <!-- Time Ruler -->
       <editor-ruler
         :pixels-per-ms="pixelsPerMs"
         :duration="state.duration"
         :container-width="containerWidth"
+        @seek="handleRulerClick"
       />
 
       <!-- Tracks -->

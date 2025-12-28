@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const { t } = useI18n()
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   open: boolean
   title?: string
   description?: string
@@ -18,8 +18,8 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  confirm: []
-  cancel: []
+  'confirm': []
+  'cancel': []
 }>()
 
 function handleConfirm() {

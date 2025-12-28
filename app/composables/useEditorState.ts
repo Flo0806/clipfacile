@@ -54,6 +54,7 @@ export function useEditorState() {
     addClip: store.addClip,
     moveClip: store.moveClip,
     removeClip: store.removeClip,
+    resizeClip: store.resizeClip,
     addTrack: store.addTrack,
     selectClip: store.selectClip,
     hasCollision: store.hasCollision,

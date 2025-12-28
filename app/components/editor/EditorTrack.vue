@@ -13,6 +13,7 @@ const emit = defineEmits<{
   moveClip: [clipId: string, trackId: string, timeMs: number]
   removeClip: [clipId: string]
   selectClip: [clipId: string]
+  resizeClip: [clipId: string, edge: 'left' | 'right', newEdgeTimeMs: number]
 }>()
 
 const { getMediaFile, snapToMarker } = useEditorState()
@@ -100,6 +101,15 @@ function getClipSourceId(clip: Clip): string | undefined {
   }
   return undefined
 }
+
+// Resize handlers
+function handleClipResize(_clipId: string, _edge: 'left' | 'right', _newEdgeTimeMs: number) {
+  // Could show preview here
+}
+
+function handleClipResizeEnd(clipId: string, edge: 'left' | 'right', newEdgeTimeMs: number) {
+  emit('resizeClip', clipId, edge, newEdgeTimeMs)
+}
 </script>
 
 <template>
@@ -144,6 +154,8 @@ function getClipSourceId(clip: Clip): string | undefined {
         @select="handleSelectClip"
         @move="handleClipMove"
         @move-end="handleClipMoveEnd"
+        @resize="handleClipResize"
+        @resize-end="handleClipResizeEnd"
       />
     </div>
   </div>

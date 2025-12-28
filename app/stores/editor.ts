@@ -188,6 +188,106 @@ export const useEditorStore = defineStore('editor', () => {
     }
   }
 
+  /**
+   * Resize a clip from left or right edge
+   * @param clipId - The clip to resize
+   * @param edge - Which edge is being dragged ('left' or 'right')
+   * @param newEdgeTimeMs - The new position of that edge in timeline ms
+   * @returns true if resize was successful
+   */
+  function resizeClip(clipId: string, edge: 'left' | 'right', newEdgeTimeMs: number): boolean {
+    const clipIndex = clips.value.findIndex((c) => c.id === clipId)
+    if (clipIndex === -1) return false
+
+    const clip = clips.value[clipIndex]
+    if (!clip) return false
+
+    const mediaFile = mediaFiles.value.find((m) => m.id === (clip as VideoClip | AudioClip).sourceId)
+    const sourceDuration = mediaFile?.duration ?? -1
+    const isUnlimited = sourceDuration === -1 // Images have unlimited duration
+
+    const currentStart = clip.timelineStart
+    const currentSourceStart = clip.sourceStart ?? 0
+
+    let newTimelineStart = currentStart
+    let newDuration = clip.duration
+    let newSourceStart = currentSourceStart
+    let newSourceEnd = currentSourceStart + clip.duration
+
+    const MIN_CLIP_DURATION = 100 // Minimum 100ms
+
+    if (edge === 'right') {
+      // Right edge: change duration and sourceEnd
+      newDuration = Math.max(MIN_CLIP_DURATION, newEdgeTimeMs - currentStart)
+
+      if (!isUnlimited) {
+        // For video/audio: can't extend beyond source duration
+        const maxDuration = sourceDuration - currentSourceStart
+        newDuration = Math.min(newDuration, maxDuration)
+      }
+
+      newSourceEnd = currentSourceStart + newDuration
+    } else {
+      // Left edge: change timelineStart, duration, and sourceStart
+      const newStart = Math.max(0, newEdgeTimeMs)
+      const deltaMs = currentStart - newStart // positive when moving left
+
+      if (!isUnlimited) {
+        // For video/audio: can't extend sourceStart below 0
+        const maxLeftMove = currentSourceStart
+        const actualDelta = Math.min(deltaMs, maxLeftMove)
+
+        // Also check if we're shrinking (moving right)
+        if (deltaMs < 0) {
+          // Moving right (shrinking from left)
+          const maxShrink = clip.duration - MIN_CLIP_DURATION
+          const actualShrink = Math.min(-deltaMs, maxShrink)
+          newTimelineStart = currentStart + actualShrink
+          newDuration = clip.duration - actualShrink
+          newSourceStart = currentSourceStart + actualShrink
+        } else {
+          // Moving left (extending)
+          newTimelineStart = currentStart - actualDelta
+          newDuration = clip.duration + actualDelta
+          newSourceStart = currentSourceStart - actualDelta
+        }
+      } else {
+        // For images: unlimited extension, but can still shrink
+        if (deltaMs < 0) {
+          // Moving right (shrinking)
+          const maxShrink = clip.duration - MIN_CLIP_DURATION
+          const actualShrink = Math.min(-deltaMs, maxShrink)
+          newTimelineStart = currentStart + actualShrink
+          newDuration = clip.duration - actualShrink
+        } else {
+          // Moving left (extending)
+          newTimelineStart = newStart
+          newDuration = clip.duration + deltaMs
+        }
+        newSourceStart = 0
+      }
+
+      newSourceEnd = newSourceStart + newDuration
+    }
+
+    // Check for collision with new dimensions
+    if (hasCollision(clip.trackId, newTimelineStart, newDuration, clipId)) {
+      return false
+    }
+
+    // Apply changes
+    clips.value[clipIndex] = {
+      ...clip,
+      timelineStart: newTimelineStart,
+      duration: newDuration,
+      sourceStart: newSourceStart,
+      sourceEnd: newSourceEnd,
+    }
+
+    updateDuration()
+    return true
+  }
+
   function addTrack(type: TrackType): Track {
     const trackCount = tracks.value.filter((t) => t.type === type).length + 1
     const typeName = type.charAt(0).toUpperCase() + type.slice(1)
@@ -282,6 +382,7 @@ export const useEditorStore = defineStore('editor', () => {
     addClip,
     moveClip,
     removeClip,
+    resizeClip,
     addTrack,
     selectClip,
     hasCollision,

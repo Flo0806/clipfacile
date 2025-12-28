@@ -6,6 +6,7 @@ const {
   addClip,
   moveClip,
   removeClip,
+  resizeClip,
   selectClip,
   addTrack,
   zoomIn,
@@ -62,6 +63,10 @@ function handleSelectClip(clipId: string) {
 
 function handleRemoveClip(clipId: string) {
   removeClip(clipId)
+}
+
+function handleResizeClip(clipId: string, edge: 'left' | 'right', newEdgeTimeMs: number) {
+  resizeClip(clipId, edge, newEdgeTimeMs)
 }
 
 // DnD handler for media drops from library
@@ -141,6 +146,7 @@ function handleTimelineDragOver(event: DragEvent) {
           @move-clip="handleMoveClip"
           @select-clip="handleSelectClip"
           @remove-clip="handleRemoveClip"
+          @resize-clip="handleResizeClip"
         />
 
         <!-- Empty state -->

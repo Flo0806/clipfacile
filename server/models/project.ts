@@ -53,6 +53,20 @@ const EffectSchema = new Schema({
   params: { type: Map, of: Schema.Types.Mixed },
 }, { _id: false })
 
+const MediaFileSchema = new Schema({
+  id: { type: String, required: true },
+  name: { type: String, required: true },
+  type: { type: String, enum: ['video', 'audio', 'image'], required: true },
+  mimeType: { type: String, required: true },
+  size: { type: Number, required: true },
+  duration: { type: Number, default: -1 },
+  dimensions: {
+    width: Number,
+    height: Number,
+  },
+  filename: { type: String, required: true },
+}, { _id: false })
+
 const ProjectSchema = new Schema<Project>({
   name: { type: String, required: true },
   description: String,
@@ -66,6 +80,7 @@ const ProjectSchema = new Schema<Project>({
   clips: { type: [ClipSchema], default: [] },
   transitions: { type: [TransitionSchema], default: [] },
   effects: { type: [EffectSchema], default: [] },
+  mediaFiles: { type: [MediaFileSchema], default: [] },
 }, {
   timestamps: true,
 })

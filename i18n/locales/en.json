@@ -3,6 +3,17 @@
     "name": "Clipfacile",
     "tagline": "Simple video editing in the browser"
   },
+  "projects": {
+    "title": "Projects",
+    "new": "New Project",
+    "empty": "No projects yet",
+    "clips": "Clips",
+    "lastModified": "Last modified",
+    "open": "Open Project",
+    "deleteTitle": "Delete Project",
+    "deleteConfirm": "Are you sure you want to delete \"{name}\"? This cannot be undone.",
+    "loadingMedia": "Loading media..."
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -48,6 +59,8 @@
     "deleteTrack": "Delete track",
     "deleteTrackConfirm": "This track contains clips. Delete anyway?",
     "deleteTrackTitle": "Delete track",
-    "trackLimitReached": "Maximum number of {type} tracks reached"
+    "trackLimitReached": "Maximum number of {type} tracks reached",
+    "unsavedChanges": "Unsaved changes",
+    "saving": "Saving..."
   }
 }

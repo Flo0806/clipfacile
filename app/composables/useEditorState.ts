@@ -67,6 +67,15 @@ export function useEditorState() {
     setZoom: store.setZoom,
     snapToMarker: store.snapToMarker,
 
+    // Project persistence
+    createProject: store.createProject,
+    loadProject: store.loadProject,
+    saveProject: store.saveProject,
+    setProjectName: store.setProjectName,
+    uploadMediaFile: store.uploadMediaFile,
+    isSaving: store.isSaving,
+    hasUnsavedChanges: store.hasUnsavedChanges,
+
     // Getters
     getClipsForTrack: store.getClipsForTrack,
     getMediaFile: store.getMediaFile,

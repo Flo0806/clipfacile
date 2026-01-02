@@ -6,6 +6,9 @@ const DEFAULT_IMAGE_DURATION = 5000 // 5 seconds default for images
 // Track limits per type
 const MAX_TRACKS_PER_TYPE = 10
 
+// Autosave debounce time
+const AUTOSAVE_DELAY = 3000
+
 export const useEditorStore = defineStore('editor', () => {
   // State
   const projectId = ref<string | null>(null)
@@ -20,6 +23,12 @@ export const useEditorStore = defineStore('editor', () => {
   const isPlaying = ref(false)
   const resolution = ref<Dimensions>({ width: 1920, height: 1080 })
   const frameRate = ref(30)
+
+  // Autosave state
+  const isSaving = ref(false)
+  const lastSaved = ref<Date | null>(null)
+  const hasUnsavedChanges = ref(false)
+  let autosaveTimeout: ReturnType<typeof setTimeout> | null = null
 
   // Computed state object for convenient access
   const state = computed<EditorState>(() => ({
@@ -156,6 +165,7 @@ export const useEditorStore = defineStore('editor', () => {
 
     clips.value.push(clip)
     updateDuration()
+    scheduleAutosave()
     return clip
   }
 
@@ -177,6 +187,7 @@ export const useEditorStore = defineStore('editor', () => {
       timelineStart: Math.max(0, newTimelineStart),
     }
     updateDuration()
+    scheduleAutosave()
     return true
   }
 
@@ -188,6 +199,7 @@ export const useEditorStore = defineStore('editor', () => {
         selectedClipId.value = null
       }
       updateDuration()
+      scheduleAutosave()
     }
   }
 
@@ -288,6 +300,7 @@ export const useEditorStore = defineStore('editor', () => {
     }
 
     updateDuration()
+    scheduleAutosave()
     return true
   }
 
@@ -310,6 +323,7 @@ export const useEditorStore = defineStore('editor', () => {
     }
     tracks.value.push(newTrack)
     sortTracks()
+    scheduleAutosave()
     return newTrack
   }
 
@@ -337,6 +351,7 @@ export const useEditorStore = defineStore('editor', () => {
     // Renumber tracks of same type
     renumberTracks()
     updateDuration()
+    scheduleAutosave()
 
     return { success: true, hadClips }
   }
@@ -432,6 +447,186 @@ export const useEditorStore = defineStore('editor', () => {
     return { time: timeMs, snapped: false }
   }
 
+  // ========== Project Persistence ==========
+
+  /**
+   * Create a new project on the server
+   */
+  async function createProject(name?: string): Promise<string> {
+    const response = await $fetch<ProjectCreateResponse>('/api/projects', {
+      method: 'POST',
+      body: { name: name || 'Unbenannt' },
+    })
+
+    projectId.value = response.id
+    projectName.value = response.name
+    hasUnsavedChanges.value = false
+    lastSaved.value = new Date()
+
+    return response.id
+  }
+
+  /**
+   * Load a project from the server
+   */
+  async function loadProject(id: string): Promise<void> {
+    const response = await $fetch<ProjectResponse>(`/api/projects/${id}`)
+
+    projectId.value = response.id
+    projectName.value = response.name
+    resolution.value = response.resolution
+    frameRate.value = response.frameRate
+    duration.value = response.duration
+    tracks.value = response.tracks
+    clips.value = response.clips
+    selectedClipId.value = null
+    currentTime.value = 0
+    isPlaying.value = false
+    hasUnsavedChanges.value = false
+    lastSaved.value = new Date(response.updatedAt)
+
+    // Reconstruct MediaFile objects and preload media via fetch (fills browser cache)
+    const preloadPromises: Promise<MediaFile>[] = response.mediaFiles.map(async (stored) => {
+      const url = `/api/media/${response.id}/${stored.filename}`
+
+      // Fetch the entire file to cache it (must call .blob() to actually download body)
+      try {
+        const res = await fetch(url)
+        await res.blob()
+      } catch {
+        // Ignore preload errors - file will be fetched when needed
+      }
+
+      return {
+        id: stored.id,
+        name: stored.name,
+        type: stored.type,
+        mimeType: stored.mimeType,
+        size: stored.size,
+        duration: stored.duration,
+        dimensions: stored.dimensions,
+        url,
+      }
+    })
+
+    // Wait for all media to preload (caches in browser)
+    mediaFiles.value = await Promise.all(preloadPromises)
+  }
+
+  /**
+   * Save current project to server
+   */
+  async function saveProject(): Promise<void> {
+    if (!projectId.value) {
+      await createProject(projectName.value)
+      return
+    }
+
+    isSaving.value = true
+    try {
+      const response = await $fetch<ProjectUpdateResponse>(`/api/projects/${projectId.value}`, {
+        method: 'PATCH',
+        body: {
+          name: projectName.value,
+          tracks: tracks.value,
+          clips: clips.value,
+          duration: duration.value,
+        },
+      })
+
+      lastSaved.value = new Date(response.updatedAt)
+      hasUnsavedChanges.value = false
+    } finally {
+      isSaving.value = false
+    }
+  }
+
+  /**
+   * Schedule autosave (debounced)
+   */
+  function scheduleAutosave() {
+    hasUnsavedChanges.value = true
+
+    if (autosaveTimeout) {
+      clearTimeout(autosaveTimeout)
+    }
+
+    autosaveTimeout = setTimeout(() => {
+      saveProject().catch(console.error)
+    }, AUTOSAVE_DELAY)
+  }
+
+  /**
+   * Update project name
+   */
+  function setProjectName(name: string) {
+    projectName.value = name
+    scheduleAutosave()
+  }
+
+  /**
+   * Upload a media file to the server
+   */
+  async function uploadMediaFile(file: File): Promise<MediaFile> {
+    // First, ensure we have a project
+    if (!projectId.value) {
+      await createProject()
+    }
+
+    // Upload to server
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await $fetch<MediaUploadResponse>(`/api/projects/${projectId.value}/upload`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    // Create local MediaFile with server URL
+    const mediaFile = await new Promise<MediaFile>((resolve, reject) => {
+      if (response.type === 'image') {
+        const img = new Image()
+        img.onload = () => {
+          resolve({
+            id: response.id,
+            file,
+            name: response.originalName,
+            type: response.type,
+            mimeType: response.mimeType,
+            size: response.size,
+            duration: -1,
+            dimensions: { width: img.width, height: img.height },
+            url: response.url,
+          })
+        }
+        img.onerror = () => reject(new Error('Failed to load image'))
+        img.src = response.url
+      } else {
+        const element = document.createElement(response.type === 'video' ? 'video' : 'audio')
+        element.src = response.url
+        element.onloadedmetadata = () => {
+          resolve({
+            id: response.id,
+            file,
+            name: response.originalName,
+            type: response.type,
+            mimeType: response.mimeType,
+            size: response.size,
+            duration: element.duration * 1000,
+            dimensions: response.type === 'video'
+              ? { width: (element as HTMLVideoElement).videoWidth, height: (element as HTMLVideoElement).videoHeight }
+              : undefined,
+            url: response.url,
+          })
+        }
+        element.onerror = () => reject(new Error('Failed to load media'))
+      }
+    })
+
+    mediaFiles.value.push(mediaFile)
+    return mediaFile
+  }
+
   return {
     // State (readonly for external use)
     state,
@@ -472,5 +667,15 @@ export const useEditorStore = defineStore('editor', () => {
     zoomOut,
     setZoom,
     snapToMarker,
+
+    // Project persistence
+    createProject,
+    loadProject,
+    saveProject,
+    setProjectName,
+    uploadMediaFile,
+    isSaving: computed(() => isSaving.value),
+    lastSaved: computed(() => lastSaved.value),
+    hasUnsavedChanges: computed(() => hasUnsavedChanges.value),
   }
 })

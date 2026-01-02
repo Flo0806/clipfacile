@@ -1,21 +1,25 @@
 <script setup lang="ts">
 const { t } = useI18n()
-const { state, addMediaFile } = useEditorState()
+const { state, uploadMediaFile } = useEditorState()
 
 const fileInput = ref<HTMLInputElement>()
 const isLoading = ref(false)
+const uploadError = ref<string | null>(null)
 
 async function handleFileSelect(event: Event) {
   const input = event.target as HTMLInputElement
   if (!input.files?.length) return
 
   isLoading.value = true
+  uploadError.value = null
+
   try {
     for (const file of input.files) {
-      await addMediaFile(file)
+      await uploadMediaFile(file)
     }
   } catch (error) {
     console.error('Failed to import file:', error)
+    uploadError.value = error instanceof Error ? error.message : 'Upload failed'
   } finally {
     isLoading.value = false
     if (fileInput.value) {
@@ -83,6 +87,13 @@ function formatSize(bytes: number): string {
       >
         {{ t('editor.import') }}
       </u-button>
+
+      <p
+        v-if="uploadError"
+        class="mt-2 text-xs text-red-500"
+      >
+        {{ uploadError }}
+      </p>
     </div>
 
     <!-- Media List -->

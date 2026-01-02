@@ -3,6 +3,17 @@
     "name": "Clipfacile",
     "tagline": "Einfache Videobearbeitung im Browser"
   },
+  "projects": {
+    "title": "Projekte",
+    "new": "Neues Projekt",
+    "empty": "Noch keine Projekte",
+    "clips": "Clips",
+    "lastModified": "Zuletzt bearbeitet",
+    "open": "Projekt öffnen",
+    "deleteTitle": "Projekt löschen",
+    "deleteConfirm": "Möchtest du \"{name}\" wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
+    "loadingMedia": "Lade Medien..."
+  },
   "common": {
     "save": "Speichern",
     "cancel": "Abbrechen",
@@ -48,6 +59,8 @@
     "deleteTrack": "Spur löschen",
     "deleteTrackConfirm": "Diese Spur enthält Clips. Wirklich löschen?",
     "deleteTrackTitle": "Spur löschen",
-    "trackLimitReached": "Maximale Anzahl an {type}-Spuren erreicht"
+    "trackLimitReached": "Maximale Anzahl an {type}-Spuren erreicht",
+    "unsavedChanges": "Ungespeicherte Änderungen",
+    "saving": "Speichert..."
   }
 }

@@ -123,6 +123,18 @@ export interface MediaSource {
   uploadedAt: Date
 }
 
+// Stored media file (in project document)
+export interface StoredMediaFile {
+  id: string
+  name: string
+  type: 'video' | 'audio' | 'image'
+  mimeType: string
+  size: number
+  duration: number // -1 for images
+  dimensions?: Dimensions
+  filename: string // server filename for URL construction
+}
+
 // Project
 export interface Project {
   _id?: Types.ObjectId
@@ -135,25 +147,9 @@ export interface Project {
   clips: Clip[]
   transitions: Transition[]
   effects: Effect[]
+  mediaFiles: StoredMediaFile[]
   createdAt: Date
   updatedAt: Date
-}
-
-// API request/response types
-export interface CreateProjectRequest {
-  name: string
-  description?: string
-  resolution?: Dimensions
-  frameRate?: number
-}
-
-export interface UpdateProjectRequest {
-  name?: string
-  description?: string
-  tracks?: Track[]
-  clips?: Clip[]
-  transitions?: Transition[]
-  effects?: Effect[]
 }
 
 // Export settings

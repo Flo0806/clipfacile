@@ -1,10 +1,34 @@
 <script setup lang="ts">
 const { t } = useI18n()
 const colorMode = useColorMode()
-const { state, initializeProject } = useEditorState()
+const {
+  state,
+  initializeProject,
+  setProjectName,
+  saveProject,
+  isSaving,
+  hasUnsavedChanges,
+} = useEditorState()
 const { isPlaying, togglePlayback, seek } = usePreviewEngine()
 
-const projectName = ref(t('common.untitled'))
+// Local ref for input binding (synced with store)
+const projectNameInput = ref(state.projectName)
+const projectsDialogOpen = ref(false)
+
+// Sync input with store on blur
+function handleProjectNameBlur() {
+  const trimmed = projectNameInput.value.trim()
+  if (trimmed && trimmed !== state.projectName) {
+    setProjectName(trimmed)
+  } else {
+    projectNameInput.value = state.projectName
+  }
+}
+
+// Watch for external changes to project name
+watch(() => state.projectName, (newName) => {
+  projectNameInput.value = newName
+})
 
 // Initialize project on mount
 onMounted(() => {
@@ -15,9 +39,8 @@ function toggleTheme() {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
 }
 
-function saveProject() {
-  // TODO: Implement save
-  console.log('Saving project...')
+async function handleSave() {
+  await saveProject()
 }
 
 // Format time as MM:SS
@@ -88,11 +111,36 @@ onUnmounted(() => {
         >
           {{ t('app.name') }}
         </nuxt-link>
+        <u-button
+          icon="i-heroicons-folder-open"
+          variant="ghost"
+          color="neutral"
+          :aria-label="t('projects.open')"
+          @click="projectsDialogOpen = true"
+        />
         <u-input
-          v-model="projectName"
+          v-model="projectNameInput"
           variant="ghost"
           class="font-medium"
+          @blur="handleProjectNameBlur"
+          @keydown.enter="($event.target as HTMLInputElement).blur()"
         />
+        <span
+          v-if="isSaving"
+          class="flex items-center gap-1 text-xs text-primary-500"
+        >
+          <u-icon
+            name="i-heroicons-arrow-path"
+            class="w-3 h-3 animate-spin"
+          />
+          {{ t('editor.saving') }}
+        </span>
+        <span
+          v-else-if="hasUnsavedChanges"
+          class="text-xs text-gray-400"
+        >
+          {{ t('editor.unsavedChanges') }}
+        </span>
       </div>
 
       <div class="flex items-center gap-2">
@@ -138,7 +186,8 @@ onUnmounted(() => {
         <u-button
           icon="i-heroicons-cloud-arrow-up"
           color="primary"
-          @click="saveProject"
+          :loading="isSaving"
+          @click="handleSave"
         >
           {{ t('common.save') }}
         </u-button>
@@ -170,9 +219,9 @@ onUnmounted(() => {
           />
           <u-button
             :icon="isPlaying ? 'i-heroicons-pause' : 'i-heroicons-play'"
+            class="rounded-full"
             color="primary"
             size="xl"
-            class="rounded-full"
             :aria-label="isPlaying ? t('editor.pause') : t('editor.play')"
             @click="togglePlayback"
           />
@@ -195,5 +244,8 @@ onUnmounted(() => {
     <div class="h-52 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
       <editor-timeline />
     </div>
+
+    <!-- Projects Dialog -->
+    <dialogs-projects-dialog v-model:open="projectsDialogOpen" />
   </div>
 </template>

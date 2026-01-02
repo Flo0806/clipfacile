@@ -24,7 +24,17 @@ export default defineNuxtConfig({
   runtimeConfig: {
     mongodbUri: process.env.MONGODB_URI || '',
   },
+
   compatibilityDate: '2025-07-15',
+
+  nitro: {
+    storage: {
+      uploads: {
+        driver: 'fs',
+        base: './uploads',
+      },
+    },
+  },
 
   eslint: {
     config: {

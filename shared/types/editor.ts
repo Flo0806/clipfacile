@@ -6,14 +6,14 @@ export type MediaType = 'video' | 'audio' | 'image'
 // Media file loaded in browser (client-side)
 export interface MediaFile {
   id: string
-  file: File
+  file?: File // Only present for newly uploaded files, not for loaded projects
   name: string
   type: MediaType
   mimeType: string
   size: number
   duration: number // in ms, -1 for images
   dimensions?: Dimensions // for video/image
-  url: string // blob URL for preview
+  url: string // blob URL or server URL
   thumbnail?: string // blob URL for thumbnail
 }
 

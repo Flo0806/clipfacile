@@ -21,6 +21,8 @@ export interface CompositorLayer {
   // Transform properties
   opacity: number
   visible: boolean
+  // Cache: true once image has been successfully drawn
+  imageReady: boolean
 }
 
 export interface CompositorOptions {
@@ -151,6 +153,7 @@ export function useCompositor() {
       element,
       opacity: 1,
       visible: true,
+      imageReady: false,
     }
 
     layers.set(clipId, layer)
@@ -232,9 +235,12 @@ export function useCompositor() {
         sourceWidth = element.videoWidth
         sourceHeight = element.videoHeight
       } else {
-        // Image
-        if (!element.complete || element.naturalWidth === 0) {
-          continue
+        // Image - once loaded, always ready (prevents flicker)
+        if (!layer.imageReady) {
+          if (!element.complete || element.naturalWidth === 0) {
+            continue
+          }
+          layer.imageReady = true
         }
         sourceWidth = element.naturalWidth
         sourceHeight = element.naturalHeight

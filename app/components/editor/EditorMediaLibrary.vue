@@ -116,6 +116,8 @@ function formatSize(bytes: number): string {
               :src="media.url"
               class="w-full h-full object-cover"
               muted
+              preload="metadata"
+              disablepictureinpicture
             />
             <img
               v-else-if="media.type === 'image'"

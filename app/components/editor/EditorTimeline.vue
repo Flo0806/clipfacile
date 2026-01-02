@@ -10,10 +10,10 @@ const {
   selectClip,
   addTrack,
   removeTrack,
-  setCurrentTime,
   zoomIn,
   zoomOut,
 } = useEditorState()
+const { seek } = usePreviewEngine()
 
 // Delete confirmation dialog state
 const showDeleteDialog = ref(false)
@@ -83,9 +83,9 @@ function handleTimelineDragOver(event: DragEvent) {
   event.preventDefault()
 }
 
-// Ruler click handler
+// Ruler click handler - uses seek() to sync video elements
 function handleRulerClick(timeMs: number) {
-  setCurrentTime(timeMs)
+  seek(timeMs)
 }
 
 // Track deletion

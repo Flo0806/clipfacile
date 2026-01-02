@@ -143,7 +143,7 @@ function handleDeleteTrack() {
       </div>
       <!-- Delete button (visible on hover) -->
       <u-button
-        v-show="isHovered"
+        v-if="isHovered"
         icon="i-heroicons-x-mark"
         variant="ghost"
         color="error"

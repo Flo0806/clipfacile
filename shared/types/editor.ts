@@ -51,3 +51,21 @@ export interface TimelineConfig {
   minZoom: number
   maxZoom: number
 }
+
+// Ghost element for cross-track clip dragging
+export interface GhostClip {
+  timeMs: number
+  durationMs: number
+}
+
+// Track type to color mapping
+export type TrackColor = 'cyan' | 'purple' | 'gray'
+
+export function getTrackColor(type: 'video' | 'audio' | 'text'): TrackColor {
+  switch (type) {
+    case 'video': return 'cyan'
+    case 'audio': return 'purple'
+    case 'text': return 'gray'
+    default: return 'gray'
+  }
+}

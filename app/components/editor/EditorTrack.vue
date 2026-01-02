@@ -8,11 +8,14 @@ const props = defineProps<{
   selectedClipId: string | null
   timelineWidth: number
   timelineElement: HTMLElement | null
+  ghostClip: GhostClip | null
 }>()
 
 const emit = defineEmits<{
   dropMedia: [mediaId: string, trackId: string, timeMs: number]
-  moveClip: [clipId: string, trackId: string, timeMs: number]
+  clipDrag: [clipId: string, timeMs: number, durationMs: number, clientY: number]
+  clipDragEnd: []
+  moveClip: [clipId: string, trackId: string, timeMs: number, clientY: number]
   removeClip: [clipId: string]
   selectClip: [clipId: string]
   resizeClip: [clipId: string, edge: 'left' | 'right', newEdgeTimeMs: number]
@@ -26,14 +29,7 @@ const isHovered = ref(false)
 const trackRef = ref<HTMLElement>()
 const isDragOver = ref(false)
 
-const trackColor = computed(() => {
-  switch (props.track.type) {
-    case 'video': return 'cyan'
-    case 'audio': return 'purple'
-    case 'text': return 'gray'
-    default: return 'gray'
-  }
-})
+const trackColor = computed(() => getTrackColor(props.track.type))
 
 // DnD handlers - only for media drops from library
 function handleDragOver(event: DragEvent) {
@@ -88,15 +84,19 @@ function handleSelectClip(clipId: string) {
   emit('selectClip', clipId)
 }
 
-function handleClipMove(_clipId: string, _newTimeMs: number) {
-  // Could show preview/collision detection here
+function handleClipMove(clipId: string, newTimeMs: number, clientY: number) {
+  const clip = props.clips.find((c) => c.id === clipId)
+  if (clip) {
+    emit('clipDrag', clipId, newTimeMs, clip.duration, clientY)
+  }
 }
 
-function handleClipMoveEnd(clipId: string, newTimeMs: number, removed: boolean) {
+function handleClipMoveEnd(clipId: string, newTimeMs: number, removed: boolean, clientY: number) {
+  emit('clipDragEnd')
   if (removed) {
     emit('removeClip', clipId)
   } else {
-    emit('moveClip', clipId, props.track.id, newTimeMs)
+    emit('moveClip', clipId, props.track.id, newTimeMs, clientY)
   }
 }
 
@@ -182,6 +182,17 @@ function handleDeleteTrack() {
         @move-end="handleClipMoveEnd"
         @resize="handleClipResize"
         @resize-end="handleClipResizeEnd"
+      />
+
+      <!-- Ghost element for cross-track dragging -->
+      <div
+        v-if="ghostClip"
+        class="absolute top-0.5 bottom-0.5 rounded pointer-events-none"
+        :class="`bg-${trackColor}-500/40 border-2 border-dashed border-${trackColor}-500`"
+        :style="{
+          left: `${ghostClip.timeMs * pixelsPerMs}px`,
+          width: `${ghostClip.durationMs * pixelsPerMs}px`,
+        }"
       />
     </div>
   </div>

@@ -10,8 +10,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   select: [clipId: string]
-  move: [clipId: string, newTimeMs: number]
-  moveEnd: [clipId: string, newTimeMs: number, removed: boolean]
+  move: [clipId: string, newTimeMs: number, clientY: number]
+  moveEnd: [clipId: string, newTimeMs: number, removed: boolean, clientY: number]
   resize: [clipId: string, edge: 'left' | 'right', newEdgeTimeMs: number]
   resizeEnd: [clipId: string, edge: 'left' | 'right', newEdgeTimeMs: number]
 }>()
@@ -25,6 +25,7 @@ const dragStartTimeMs = ref(0)
 const currentTimeMs = ref(props.clip.timelineStart)
 const isSnapped = ref(false)
 const isOutsideTimeline = ref(false)
+const lastClientY = ref(0)
 
 // Resize state
 const isResizing = ref(false)
@@ -67,14 +68,7 @@ const clipStyle = computed(() => {
   }
 })
 
-const clipColor = computed(() => {
-  switch (props.clip.type) {
-    case 'video': return 'cyan'
-    case 'audio': return 'purple'
-    case 'text': return 'gray'
-    default: return 'gray'
-  }
-})
+const clipColor = computed(() => getTrackColor(props.clip.type))
 
 function handlePointerDown(event: PointerEvent) {
   // Only handle left mouse button
@@ -109,6 +103,9 @@ function handlePointerMove(event: PointerEvent) {
   const deltaTimeMs = deltaX / props.pixelsPerMs
   let newTimeMs = Math.max(0, dragStartTimeMs.value + deltaTimeMs)
 
+  // Track Y position for cross-track dragging
+  lastClientY.value = event.clientY
+
   // Check if outside timeline (vertically)
   if (props.timelineElement) {
     const rect = props.timelineElement.getBoundingClientRect()
@@ -127,8 +124,8 @@ function handlePointerMove(event: PointerEvent) {
 
   currentTimeMs.value = newTimeMs
 
-  // Emit move for potential collision preview
-  emit('move', props.clip.id, newTimeMs)
+  // Emit move with Y position for ghost element
+  emit('move', props.clip.id, newTimeMs, event.clientY)
 }
 
 function handlePointerUp(event: PointerEvent) {
@@ -143,14 +140,15 @@ function handlePointerUp(event: PointerEvent) {
 
   const finalTimeMs = currentTimeMs.value
   const removed = isOutsideTimeline.value
+  const clientY = lastClientY.value
 
   // Reset state
   isDragging.value = false
   isSnapped.value = false
   isOutsideTimeline.value = false
 
-  // Emit move end
-  emit('moveEnd', props.clip.id, finalTimeMs, removed)
+  // Emit move end with Y position for cross-track detection
+  emit('moveEnd', props.clip.id, finalTimeMs, removed, clientY)
 }
 
 function handleClick(event: MouseEvent) {

@@ -20,7 +20,17 @@ const showDeleteDialog = ref(false)
 const trackToDelete = ref<string | null>(null)
 const trackToDeleteHasClips = ref(false)
 
+// Ghost element state for cross-track dragging
+const ghostState = ref<{
+  clipId: string
+  targetTrackId: string | null
+  sourceTrackId: string
+  timeMs: number
+  durationMs: number
+} | null>(null)
+
 const timelineRef = ref<HTMLElement>()
+const tracksContainerRef = ref<HTMLElement>()
 const containerWidth = ref(800)
 const pixelsPerMs = computed(() => 0.1 * state.zoom) // 0.1px per ms at zoom 1
 
@@ -48,19 +58,71 @@ function handleDropMedia(mediaId: string, trackId: string, timeMs: number) {
   addClip(mediaId, trackId, timeMs)
 }
 
-function handleMoveClip(clipId: string, trackId: string, timeMs: number) {
-  const success = moveClip(clipId, trackId, timeMs)
+/**
+ * Find the track at a given Y position
+ */
+function findTrackAtY(clientY: number, clipType: string): Track | null {
+  if (!tracksContainerRef.value) return null
+
+  const trackElements = tracksContainerRef.value.querySelectorAll('[data-track-id]')
+  for (const el of trackElements) {
+    const rect = el.getBoundingClientRect()
+    if (clientY >= rect.top && clientY <= rect.bottom) {
+      const trackId = el.getAttribute('data-track-id')
+      const track = state.tracks.find((t) => t.id === trackId)
+      // Only return if compatible type
+      if (track && track.type === clipType) {
+        return track
+      }
+    }
+  }
+  return null
+}
+
+function handleClipDrag(clipId: string, timeMs: number, durationMs: number, clientY: number) {
+  const clip = state.clips.find((c) => c.id === clipId)
+  if (!clip) return
+
+  const targetTrack = findTrackAtY(clientY, clip.type)
+  const sourceTrackId = clip.trackId
+
+  // Only show ghost if moving to a different track
+  if (targetTrack && targetTrack.id !== sourceTrackId) {
+    ghostState.value = {
+      clipId,
+      targetTrackId: targetTrack.id,
+      sourceTrackId,
+      timeMs,
+      durationMs,
+    }
+  } else {
+    ghostState.value = null
+  }
+}
+
+function handleClipDragEnd() {
+  ghostState.value = null
+}
+
+function handleMoveClip(clipId: string, sourceTrackId: string, timeMs: number, clientY: number) {
+  ghostState.value = null
+
+  const clip = state.clips.find((c) => c.id === clipId)
+  if (!clip) return
+
+  // Find target track based on Y position
+  const targetTrack = findTrackAtY(clientY, clip.type)
+  const targetTrackId = targetTrack?.id ?? sourceTrackId
+
+  const success = moveClip(clipId, targetTrackId, timeMs)
   if (!success) {
     // Could not move - maybe collision, try creating new track
-    const clip = state.clips.find((c) => c.id === clipId)
-    if (clip) {
-      const track = state.tracks.find((t) => t.id === trackId)
-      if (track && track.type === clip.type) {
-        // Same type, collision - create new track and move there
-        const newTrack = addTrack(clip.type)
-        if (newTrack) {
-          moveClip(clipId, newTrack.id, timeMs)
-        }
+    const track = state.tracks.find((t) => t.id === targetTrackId)
+    if (track && track.type === clip.type) {
+      // Same type, collision - create new track and move there
+      const newTrack = addTrack(clip.type)
+      if (newTrack) {
+        moveClip(clipId, newTrack.id, timeMs)
       }
     }
   }
@@ -185,17 +247,24 @@ function cancelDeleteTrack() {
       />
 
       <!-- Tracks -->
-      <div class="py-1 px-2 space-y-1">
+      <div
+        ref="tracksContainerRef"
+        class="py-1 px-2 space-y-1"
+      >
         <editor-track
           v-for="track in state.tracks"
           :key="track.id"
+          :data-track-id="track.id"
           :track="track"
           :clips="getClipsForTrack(track.id)"
           :pixels-per-ms="pixelsPerMs"
           :selected-clip-id="state.selectedClipId"
           :timeline-width="timelineWidth"
           :timeline-element="timelineRef ?? null"
+          :ghost-clip="ghostState?.targetTrackId === track.id ? { timeMs: ghostState.timeMs, durationMs: ghostState.durationMs } : null"
           @drop-media="handleDropMedia"
+          @clip-drag="handleClipDrag"
+          @clip-drag-end="handleClipDragEnd"
           @move-clip="handleMoveClip"
           @select-clip="handleSelectClip"
           @remove-clip="handleRemoveClip"

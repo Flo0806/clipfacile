@@ -18,64 +18,44 @@ const videoRefs = ref<Map<string, HTMLVideoElement>>(new Map())
 const audioRefs = ref<Map<string, HTMLAudioElement>>(new Map())
 const imageRefs = ref<Map<string, HTMLImageElement>>(new Map())
 
-// Get all video clips that need video elements
-const videoClips = computed(() => {
+// Helper to get clip info with media file
+interface ClipMediaInfo {
+  clipId: string
+  sourceId: string
+  url: string
+}
+
+function getClipsWithMedia(
+  clipType: 'video' | 'audio',
+  mediaType?: MediaType,
+): ClipMediaInfo[] {
   return state.clips
     .filter((clip) => {
-      if (clip.type !== 'video') return false
+      if (clip.type !== clipType) return false
       const sourceId = (clip as { sourceId: string }).sourceId
       const mediaFile = getMediaFile(sourceId)
-      // Only actual videos, not images on video tracks
-      return mediaFile && mediaFile.type === 'video'
+      if (!mediaFile) return false
+      return mediaType ? mediaFile.type === mediaType : true
     })
     .map((clip) => {
       const sourceId = (clip as { sourceId: string }).sourceId
-      const mediaFile = getMediaFile(sourceId)
       return {
         clipId: clip.id,
         sourceId,
-        url: mediaFile?.url ?? '',
+        url: getMediaFile(sourceId)?.url ?? '',
       }
     })
     .filter((clip) => clip.url)
-})
+}
 
-// Get all image clips (images on video tracks)
-const imageClips = computed(() => {
-  return state.clips
-    .filter((clip) => {
-      if (clip.type !== 'video') return false
-      const sourceId = (clip as { sourceId: string }).sourceId
-      const mediaFile = getMediaFile(sourceId)
-      return mediaFile && mediaFile.type === 'image'
-    })
-    .map((clip) => {
-      const sourceId = (clip as { sourceId: string }).sourceId
-      const mediaFile = getMediaFile(sourceId)
-      return {
-        clipId: clip.id,
-        sourceId,
-        url: mediaFile?.url ?? '',
-      }
-    })
-    .filter((clip) => clip.url)
-})
+// Video clips (actual videos, not images on video tracks)
+const videoClips = computed(() => getClipsWithMedia('video', 'video'))
 
-// Get all audio clips
-const audioClips = computed(() => {
-  return state.clips
-    .filter((clip) => clip.type === 'audio')
-    .map((clip) => {
-      const sourceId = (clip as { sourceId: string }).sourceId
-      const mediaFile = getMediaFile(sourceId)
-      return {
-        clipId: clip.id,
-        sourceId,
-        url: mediaFile?.url ?? '',
-      }
-    })
-    .filter((clip) => clip.url)
-})
+// Image clips (images on video tracks)
+const imageClips = computed(() => getClipsWithMedia('video', 'image'))
+
+// Audio clips
+const audioClips = computed(() => getClipsWithMedia('audio'))
 
 // Resize observer (stored for cleanup)
 let resizeObserver: ResizeObserver | null = null

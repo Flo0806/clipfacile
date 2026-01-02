@@ -6,7 +6,7 @@
  *
  * Design notes:
  * - All visual effects must map to FFmpeg filters for server-side rendering
- * - Tracks are rendered bottom-to-top (lower track order = behind)
+ * - Top track in UI (lower order) = foreground, rendered last
  * - Videos/images are drawn with drawImage() each frame
  * - CSS filters on canvas can simulate blur/glow for preview
  */
@@ -210,10 +210,11 @@ export function useCompositor() {
     ctx.fillStyle = '#000000'
     ctx.fillRect(0, 0, width, height)
 
-    // Sort layers by track order (lower = behind, higher = in front)
+    // Sort layers by track order (higher = behind, lower = in front)
+    // This means top track in UI (order 0) renders last = foreground
     const sortedLayers = Array.from(layers.values())
       .filter((layer) => layer.visible)
-      .sort((a, b) => a.trackOrder - b.trackOrder)
+      .sort((a, b) => b.trackOrder - a.trackOrder)
 
     // Draw each layer
     for (const layer of sortedLayers) {

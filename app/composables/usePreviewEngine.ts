@@ -76,6 +76,7 @@ export function usePreviewEngine() {
 
   /**
    * Get visual clips sorted by track order
+   * Higher order = behind, lower order = in front (top track in UI = foreground)
    */
   function getActiveVisualClips(timeMs: number): ActiveClip[] {
     return getActiveClips(timeMs)
@@ -83,7 +84,7 @@ export function usePreviewEngine() {
       .sort((a, b) => {
         const trackA = state.tracks.find((t) => t.id === a.trackId)
         const trackB = state.tracks.find((t) => t.id === b.trackId)
-        return (trackA?.order ?? 0) - (trackB?.order ?? 0)
+        return (trackB?.order ?? 0) - (trackA?.order ?? 0)
       })
   }
 
